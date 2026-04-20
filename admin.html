@@ -420,8 +420,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--B);color:var(--W2);min-he
 
 <script>
 var CREDS={user:'admin',pass:'admin'};
-var WA  = localStorage.getItem('pm_wa')  || '';
-var CSV = localStorage.getItem('pm_csv') || '';
+var WA  = localStorage.getItem('pm_wa')  || 'https://script.google.com/macros/s/AKfycbzfN1GQLewirXOk5soYD0saGVdTfaPx5QUErI9LLer6NTTuOmst_ZOfD2G5iCO-oXj80g/exec';
+var CSV = localStorage.getItem('pm_csv') || 'https://docs.google.com/spreadsheets/d/e/2PACX-1vScL8nIC92kU9YU2Fh2dIdDtPSkXxUetW9n0fHBCvMVuWJzPhyY3qk572MHAnmx6rv6p-QL7_c-n__c/pub?output=csv';
 var prods=[], flt='Todos', catFlt='', srch='', delIdx=-1, variations=[];
 
 /* SPLASH */
@@ -476,7 +476,7 @@ function init(){
   document.getElementById('CU').value=CSV;
   document.getElementById('WA_URL').value=WA;
   renderDash(); renderTbl();
-  if(CSV) fetchCSV(); else setSt(false,'Configura el CSV en Configuracion');
+  fetchCSV();
 }
 
 function fetchCSV(){
