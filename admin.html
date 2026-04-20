@@ -607,7 +607,9 @@ function openM(idx){
 }
 function closeM(){document.getElementById('MV').classList.remove('open');document.getElementById('PM').classList.remove('open');}
 
+var _saving=false;
 function saveProd(){
+  if(_saving) return;
   var nombre=document.getElementById('FN').value.trim();
   var categoria=document.getElementById('FC').value||'';
   var sku=document.getElementById('FS').value.trim();
@@ -622,25 +624,33 @@ function saveProd(){
   if(!nombre){toast('Nombre requerido','e');shk('FN');return;}
   if(!categoria){toast('Categoria requerida','e');shk('FC');return;}
   if(!imagen){toast('URL de imagen requerida','e');shk('FI');return;}
+  _saving=true;
   var skuInUse=prods.some(function(p,i){return i!==idx&&p.sku===sku;});
   if(!sku||skuInUse){sku=genSKU();document.getElementById('FS').value=sku;}
   var prod={nombre:nombre,categoria:categoria,sku:sku,imagen:imagen,descripcion:descripcion,precio:precio,precioMayor:precioMayor,variaciones:variaciones,estado:estado};
   var btn=document.getElementById('BSV');
   btn.disabled=true;btn.innerHTML='<div class="spin-sm"></div> Guardando...';
   function finish(msg,type){
+    _saving=false;
     btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4z"/></svg>Guardar';
-    toast(msg,type||'s');closeM();renderTbl();renderDash();updateCatFilter();setTimeout(fetchCSV,3500);
+    toast(msg,type||'s');closeM();
+    setTimeout(function(){ fetchCSV(); },2500);
   }
   if(idx>=0){
     var old=prods[idx];prods[idx]=Object.assign({},old,prod,{rowIndex:old.rowIndex,id:old.id});save();
-    if(WA&&rowIndex){callWA(Object.assign({action:'update',rowIndex:rowIndex},prod),function(r){finish(r.ok?'Actualizado en Sheet':'Guardado local',r.ok?'s':'i');});}
+    if(WA&&rowIndex){callWA(Object.assign({action:'update',rowIndex:rowIndex},prod),function(r){finish(r.ok?'Actualizado en Sheet ✓':'Error al actualizar',r.ok?'s':'e');});}
     else{finish('Actualizado localmente','i');}
   } else {
     if(WA){callWA(Object.assign({action:'add'},prod),function(r){
-      if(r.ok&&r.id){prod.id=r.id;prod.sku=r.sku||sku;}
-      prod.rowIndex=prods.length+2;prods.push(prod);save();finish(r.ok?'Agregado al Sheet':'Guardado local',r.ok?'s':'i');
+      if(r.ok){
+        prod.id=r.id||('L'+Date.now());
+        prod.sku=r.sku||sku;
+        finish('Guardado en Sheet ✓','s');
+      } else {
+        finish('Error al guardar en Sheet','e');
+      }
     });}
-    else{prod.id='L'+(prods.length+1);prod.rowIndex=prods.length+2;prods.push(prod);save();finish('Guardado local — configura el Web App para sincronizar','i');}
+    else{prod.id='L'+(prods.length+1);prod.rowIndex=prods.length+2;prods.push(prod);save();finish('Guardado local — configura el Web App','i');}
   }
 }
 
